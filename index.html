@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aeras Group | Modern Advisory & Consulting</title>
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text-primary: #ffffff;
+        }
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #030303; 
+            cursor: none; 
+        }
+
+        #webgl-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        /* Custom Cursor */
+        .cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+        
+        .cursor.hovered {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+        }
+
+        /* Liquid Glass UI */
+        .ui-layer {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            pointer-events: none; 
+        }
+        
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: 40px; 
+            padding: 3rem;
+            text-align: center;
+            color: var(--text-primary);
+            max-width: 600px;
+            pointer-events: auto;
+            box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.5);
+            transform: translateY(20px);
+            opacity: 0;
+            animation: floatIn 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes floatIn {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 300;
+            letter-spacing: -1px;
+            margin-bottom: 0.5rem;
+            margin-top: 0;
+        }
+        
+        h2 {
+            font-size: 1.1rem;
+            font-weight: 500;
+            opacity: 0.8;
+            margin-bottom: 2rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        p {
+            font-size: 1.15rem;
+            line-height: 1.6;
+            opacity: 0.9;
+            margin-bottom: 2.5rem;
+        }
+
+        .cta-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 1.2rem 3rem;
+            font-size: 1.1rem;
+            border-radius: 30px;
+            cursor: none; 
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .cta-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Sound Control */
+        .sound-control {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            cursor: none;
+            z-index: 20;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .sound-control:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .sound-waves {
+            display: flex;
+            gap: 4px;
+            height: 18px;
+            align-items: center;
+        }
+        
+        .wave {
+            width: 3px;
+            background: white;
+            border-radius: 3px;
+            height: 100%;
+            animation: equalize 1s infinite alternate ease-in-out;
+        }
+        
+        .wave:nth-child(2) { animation-delay: 0.3s; }
+        .wave:nth-child(3) { animation-delay: 0.6s; }
+        .sound-control.muted .wave { animation: none; height: 3px; }
+
+        @keyframes equalize {
+            0% { height: 3px; }
+            100% { height: 18px; }
+        }
+
+        /* Mobile Layout Adjustments */
+        @media (max-width: 768px) {
+            .glass-panel {
+                margin: 20px;
+                padding: 2.5rem 1.5rem;
+                border-radius: 30px;
+            }
+            h1 { font-size: 2.5rem; }
+            h2 { font-size: 0.9rem; }
+            .cursor { display: none; } 
+            body, html { cursor: auto; }
+            .cta-button { cursor: pointer; }
+            .sound-control { cursor: pointer; bottom: 20px; right: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cursor" id="custom-cursor"></div>
+    <div id="webgl-container"></div>
+
+    <div class="ui-layer">
+        <div class="glass-panel">
+            <h1>Aeras Group</h1>
+            <h2>Modern Advisory & Consulting</h2>
+            <p>Elevating enterprises through strategic foresight, digital transformation, and sustainable growth. We navigate the complexities of tomorrow's business landscape.</p>
+            <a href="#" class="cta-button" id="hover-target">Explore Our Vision</a>
+        </div>
+    </div>
+
+    <button class="sound-control muted" id="sound-toggle" aria-label="Toggle Sound">
+        <div class="sound-waves">
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+        </div>
+    </button>
+    <audio id="bg-audio" loop>
+        <!-- Royalty-free deep ambient space sound -->
+        <source src="https://cdn.pixabay.com/download/audio/2022/11/22/audio_febc508520.mp3?filename=ambient-dream-127596.mp3" type="audio/mpeg">
+    </audio>
+
+    <script type="module">
+        import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
+
+        // --- CUSTOM CURSOR ---
+        const cursor = document.getElementById('custom-cursor');
+        const hoverTargets = document.querySelectorAll('#hover-target, #sound-toggle');
+        
+        let mouse = new THREE.Vector2(0, 0);
+        let targetMouse = new THREE.Vector2(0, 0);
+
+        if (window.matchMedia("(pointer: fine)").matches) {
+            window.addEventListener('mousemove', (e) => {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+                
+                targetMouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+                targetMouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            });
+
+            hoverTargets.forEach(target => {
+                target.addEventListener('mouseenter', () => cursor.classList.add('hovered'));
+                target.addEventListener('mouseleave', () => cursor.classList.remove('hovered'));
+            });
+        }
+
+        // --- AUDIO ---
+        const soundToggle = document.getElementById('sound-toggle');
+        const audio = document.getElementById('bg-audio');
+        let isPlaying = false;
+
+        soundToggle.addEventListener('click', () => {
+            if (isPlaying) {
+                audio.pause();
+                soundToggle.classList.add('muted');
+            } else {
+                audio.play();
+                soundToggle.classList.remove('muted');
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // --- THREE.JS ENGINE ---
+        const container = document.getElementById('webgl-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x030303, 0.002);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 2000);
+        camera.position.set(0, 150, 400);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping; // High Dynamic Range Output
+        renderer.toneMappingExposure = 1.1;
+        container.appendChild(renderer.domElement);
+
+        // --- LIGHTING ---
+        const ambientLight = new THREE.AmbientLight(0x222222);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        dirLight.position.set(100, 200, 50);
+        scene.add(dirLight);
+
+        const accentLight = new THREE.PointLight(0x0066ff, 2, 800);
+        accentLight.position.set(-200, 100, 100);
+        scene.add(accentLight);
+
+        // --- MOUNTAINOUS TERRAIN ---
+        const terrainGeo = new THREE.PlaneGeometry(2500, 2500, 120, 120);
+        terrainGeo.rotateX(-Math.PI / 2);
+        
+        const pos = terrainGeo.attributes.position;
+        for (let i = 0; i < pos.count; i++) {
+            const x = pos.getX(i);
+            const z = pos.getZ(i);
+            const y = Math.sin(x * 0.003) * Math.cos(z * 0.003) * 120 + Math.sin(x * 0.01) * Math.cos(z * 0.01) * 40;
+            pos.setY(i, y);
+        }
+        terrainGeo.computeVertexNormals();
+
+        const terrainMat = new THREE.MeshStandardMaterial({
+            color: 0x111111,
+            roughness: 0.9,
+            metalness: 0.1,
+            wireframe: true, 
+            transparent: true,
+            opacity: 0.12
+        });
+        const terrain = new THREE.Mesh(terrainGeo, terrainMat);
+        terrain.position.y = -60;
+        scene.add(terrain);
+
+        // --- WATER ---
+        const waterGeo = new THREE.PlaneGeometry(2500, 2500, 60, 60);
+        waterGeo.rotateX(-Math.PI / 2);
+        const waterMat = new THREE.MeshPhysicalMaterial({
+            color: 0x001533,
+            transmission: 0.9,
+            opacity: 0.8,
+            metalness: 0.8,
+            roughness: 0.1,
+            ior: 1.4,
+            thickness: 0.5
+        });
+        const water = new THREE.Mesh(waterGeo, waterMat);
+        water.position.y = -25;
+        scene.add(water);
+
+        // --- GLASS GLOBE ---
+        const globeGeo = new THREE.SphereGeometry(90, 64, 64);
+        const globeMat = new THREE.MeshPhysicalMaterial({
+            color: 0x2255ff,
+            transmission: 1.0,
+            opacity: 1,
+            metalness: 0.1,
+            roughness: 0,
+            ior: 1.5,
+            thickness: 3.0,
+            clearcoat: 1.0
+        });
+        const globe = new THREE.Mesh(globeGeo, globeMat);
+        globe.position.set(180, 90, -150);
+        scene.add(globe);
+
+        // --- CLOUDS ---
+        const cloudGeo = new THREE.BufferGeometry();
+        const cloudCount = 1200;
+        const cloudPos = new Float32Array(cloudCount * 3);
+        for(let i=0; i < cloudCount * 3; i+=3) {
+            cloudPos[i] = (Math.random() - 0.5) * 2000;
+            cloudPos[i+1] = Math.random() * 250 + 60;
+            cloudPos[i+2] = (Math.random() - 0.5) * 2000;
+        }
+        cloudGeo.setAttribute('position', new THREE.BufferAttribute(cloudPos, 3));
+        const cloudMat = new THREE.PointsMaterial({
+            color: 0xffffff,
+            size: 3,
+            transparent: true,
+            opacity: 0.35,
+            blending: THREE.AdditiveBlending
+        });
+        const clouds = new THREE.Points(cloudGeo, cloudMat);
+        scene.add(clouds);
+
+        // --- RENDER LOOP ---
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = clock.getElapsedTime();
+
+            mouse.lerp(targetMouse, 0.05);
+
+            camera.position.x = mouse.x * 80;
+            camera.position.y = 150 + mouse.y * 40;
+            camera.lookAt(0, 60, 0);
+
+            globe.rotation.y = time * 0.1;
+            globe.rotation.z = time * 0.05;
+
+            const waterVerts = water.geometry.attributes.position;
+            for (let i = 0; i < waterVerts.count; i++) {
+                const u = waterVerts.getX(i);
+                const v = waterVerts.getZ(i);
+                const waveHeight = Math.sin(u * 0.01 + time) * Math.cos(v * 0.01 + time) * 12;
+                waterVerts.setY(i, waveHeight);
+            }
+            water.geometry.attributes.position.needsUpdate = true;
+
+            clouds.rotation.y = time * 0.015;
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // --- RESPONSIVE SCALING ---
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
